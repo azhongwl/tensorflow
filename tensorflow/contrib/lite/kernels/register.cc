@@ -20,7 +20,7 @@ namespace ops {
 
 namespace custom {
 
-TfLiteRegistration* Register_AUDIO_SPECTROGRAM();
+// TfLiteRegistration* Register_AUDIO_SPECTROGRAM();
 TfLiteRegistration* Register_MFCC();
 
 }  // namespace custom
@@ -145,8 +145,8 @@ BuiltinOpResolver::BuiltinOpResolver() {
   // TODO(andrewharp, ahentz): Move these somewhere more appropriate so that
   // custom ops aren't always included by default.
   AddCustom("Mfcc", tflite::ops::custom::Register_MFCC());
-  AddCustom("AudioSpectrogram",
-            tflite::ops::custom::Register_AUDIO_SPECTROGRAM());
+  // AddCustom("AudioSpectrogram",
+  //           tflite::ops::custom::Register_AUDIO_SPECTROGRAM());
 }
 
 TfLiteRegistration* BuiltinOpResolver::FindOp(
