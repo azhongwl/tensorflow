@@ -168,12 +168,17 @@ TfLiteStatus PreluPrepare(TfLiteContext* context, TfLiteNode* node) {
   // (1, 1, channels).
   // TODO(impjdi): Support other cases where `alpha` is broadcastable
   // to `input`.
-  TF_LITE_ENSURE_EQ(context, input->dims->size, 4);
-  TF_LITE_ENSURE_EQ(context, alpha->dims->size, 3);
-  TF_LITE_ENSURE_EQ(context, alpha->dims->data[0], 1);
-  TF_LITE_ENSURE_EQ(context, alpha->dims->data[1], 1);
-  TF_LITE_ENSURE_EQ(context, alpha->dims->data[2], input->dims->data[3]);
-
+  if (input->dims->size == 4) {
+    TF_LITE_ENSURE_EQ(context, alpha->dims->size, 3);
+    TF_LITE_ENSURE_EQ(context, alpha->dims->data[0], 1);
+    TF_LITE_ENSURE_EQ(context, alpha->dims->data[1], 1);
+    TF_LITE_ENSURE_EQ(context, alpha->dims->data[2], input->dims->data[3]);
+  } else if (input->dims->size == 2) {
+    TF_LITE_ENSURE_EQ(context, alpha->dims->size, 1);
+  } else {
+    context->ReportError(context, "Only input dimension of 4 or 2 is supported.");
+    return kTfLiteError;
+  }
   return context->ResizeTensor(context, output,
                                TfLiteIntArrayCopy(input->dims));
 }
@@ -425,21 +430,36 @@ TfLiteStatus PreluEval(TfLiteContext* context, TfLiteNode* node) {
     context->ReportError(context, "Only float32 supported currently.");
     return kTfLiteError;
   }
-  TF_LITE_ENSURE_EQ(context, input->dims->size, 4);
-  const int batches = input->dims->data[0];
-  const int height = input->dims->data[1];
-  const int width = input->dims->data[2];
-  const int channels = input->dims->data[3];
+  if (input->dims->size == 4) {
+    const int batches = input->dims->data[0];
+    const int height = input->dims->data[1];
+    const int width = input->dims->data[2];
+    const int channels = input->dims->data[3];
 
-  TF_LITE_ENSURE_EQ(context, alpha->dims->size, 3);
-  TF_LITE_ENSURE_EQ(context, alpha->dims->data[0], 1);
-  TF_LITE_ENSURE_EQ(context, alpha->dims->data[1], 1);
-  TF_LITE_ENSURE_EQ(context, alpha->dims->data[2], channels);
+    TF_LITE_ENSURE_EQ(context, alpha->dims->size, 3);
+    TF_LITE_ENSURE_EQ(context, alpha->dims->data[0], 1);
+    TF_LITE_ENSURE_EQ(context, alpha->dims->data[1], 1);
+    TF_LITE_ENSURE_EQ(context, alpha->dims->data[2], channels);
 
-  const int n = batches * height * width * channels;
-  for (int i = 0; i < n; ++i) {
-    const float x = input->data.f[i];
-    output->data.f[i] = x >= 0.0f ? x : alpha->data.f[i % channels] * x;
+    const int n = batches * height * width * channels;
+    for (int i = 0; i < n; ++i) {
+      const float x = input->data.f[i];
+      output->data.f[i] = x >= 0.0f ? x : alpha->data.f[i % channels] * x;
+    }
+  } else if  (input->dims->size == 2) {
+    const int batches = input->dims->data[0];
+    const int channels = input->dims->data[1];
+
+    TF_LITE_ENSURE_EQ(context, alpha->dims->size, 1);
+
+    const int n = batches * channels;
+    for (int i = 0; i < n; ++i) {
+      const float x = input->data.f[i];
+      output->data.f[i] = x >= 0.0f ? x : alpha->data.f[i % channels] * x;
+    }
+  } else {
+    context->ReportError(context, "Only input dimension of 4 or 2 is supported.");
+    return kTfLiteError;
   }
 
   return kTfLiteOk;
