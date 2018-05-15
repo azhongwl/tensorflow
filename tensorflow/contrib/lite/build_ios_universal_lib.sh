@@ -19,10 +19,6 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/../../.."
 
-make -f tensorflow/contrib/lite/Makefile TARGET=IOS IOS_ARCH=x86_64 -j 8 \
-$SCRIPT_DIR/gen/lib/ios_x86_64/libtensorflow-lite.a
-make -f tensorflow/contrib/lite/Makefile TARGET=IOS IOS_ARCH=i386 -j 8 \
-$SCRIPT_DIR/gen/lib/ios_i386/libtensorflow-lite.a
 make -f tensorflow/contrib/lite/Makefile TARGET=IOS IOS_ARCH=armv7 -j 8 \
 $SCRIPT_DIR/gen/lib/ios_armv7/libtensorflow-lite.a
 make -f tensorflow/contrib/lite/Makefile TARGET=IOS IOS_ARCH=armv7s -j 8 \
@@ -31,8 +27,6 @@ make -f tensorflow/contrib/lite/Makefile TARGET=IOS IOS_ARCH=arm64 -j 8 \
 $SCRIPT_DIR/gen/lib/ios_arm64/libtensorflow-lite.a
 
 lipo \
-tensorflow/contrib/lite/gen/lib/ios_x86_64/libtensorflow-lite.a \
-tensorflow/contrib/lite/gen/lib/ios_i386/libtensorflow-lite.a \
 tensorflow/contrib/lite/gen/lib/ios_armv7/libtensorflow-lite.a \
 tensorflow/contrib/lite/gen/lib/ios_armv7s/libtensorflow-lite.a \
 tensorflow/contrib/lite/gen/lib/ios_arm64/libtensorflow-lite.a \
